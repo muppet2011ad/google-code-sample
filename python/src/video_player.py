@@ -241,13 +241,40 @@ class VideoPlayer:
         else:
             print("Cannot delete playlist {0}: Playlist does not exist".format(playlist_name))
 
+    def search_results(self, search_term, results):
+        """Displays search results and offers to play one of the results
+        
+        Args:
+            search_term: The search term that was used to generate the search
+            results: A list of video objects to be displayed"""
+        print("Here are the results for {0}:".format(search_term))
+        x = 0
+        while x < len(results):
+            print("\t{0}) {1}".format(x+1, self.prettify_video(results[x])))
+            x += 1
+        print("Would you like to play any of the above? If yes, specify the number of the video.\nIf your answer is not a valid number, we will assume it's a no.")
+        raw_selection = input()
+        selection = None
+        try:
+            selection = int(raw_selection)
+        except ValueError:
+            return
+        if selection >= 1 and selection-1 < len(results):
+            self.play_me(results[selection-1])
+
     def search_videos(self, search_term):
         """Display all the videos whose titles contain the search_term.
 
         Args:
             search_term: The query to be used in search.
         """
-        print("search_videos needs implementation")
+        term_lower = search_term.lower()
+        results = sorted([video for video in self._video_library.get_all_videos() if term_lower in video.title.lower()], key=lambda v: v.title)
+        if results:
+            self.search_results(search_term, results)
+        else:
+            print("No search results for {0}".format(search_term))
+
 
     def search_videos_tag(self, video_tag):
         """Display all videos whose tags contains the provided tag.
@@ -255,7 +282,12 @@ class VideoPlayer:
         Args:
             video_tag: The video tag to be used in search.
         """
-        print("search_videos_tag needs implementation")
+        tag_lower = video_tag.lower()
+        results = sorted([video for video in self._video_library.get_all_videos() if tag_lower in map(lambda t: t.lower(), video.tags)], key=lambda v: v.title)
+        if results:
+            self.search_results(video_tag, results)
+        else:
+            print("No search results for {0}".format(video_tag))
 
     def flag_video(self, video_id, flag_reason=""):
         """Mark a video as flagged.
